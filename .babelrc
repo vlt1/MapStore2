@@ -1,15 +1,10 @@
 {
-    "presets": ["es2015", "react", "stage-0"],
-    "env": {
-    "development": {
-      "plugins": [
-        ["react-transform", {
-          "transforms": [ {
-            "transform": "react-transform-catch-errors",
-            "imports": ["react", "redbox-react"]
-          }]
-          }]
-      ]
-    }
-  }
+    "presets": [
+      "@babel/env",
+      "@babel/preset-react"
+    ],
+    "plugins": [
+      "@babel/plugin-proposal-class-properties",
+      "@babel/plugin-syntax-dynamic-import"
+    ]
 }

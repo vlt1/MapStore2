@@ -10,7 +10,7 @@ const {pure} = require('recompose');
 const {PieChart, Pie, Cell} = require('recharts');
 const {convertToNameValue} = require('./polar');
 
-module.exports = pure(({isAnimationActive, width = 600, height = 300, data, series =[], xAxis, colorGenerator, ...props, maxCols = 3} = {}) => {
+module.exports = pure(({ isAnimationActive, width = 600, height = 300, data, series = [], xAxis, colorGenerator, maxCols = 3, ...props} = {}) => {
     const seriesArray = Array.isArray(series) ? series : [series];
     const cols = Math.min(maxCols, seriesArray.length);
     const COLORS = colorGenerator(data.length);

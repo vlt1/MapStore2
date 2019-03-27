@@ -141,4 +141,4 @@ const EditorToolbar = compose(
         })
 )( ToolbarWithModal);
 
-module.exports = EditorToolbar;
+export default EditorToolbar;

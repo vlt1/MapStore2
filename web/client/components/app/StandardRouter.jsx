@@ -10,10 +10,8 @@ const {connect} = require('react-redux');
 const PropTypes = require('prop-types');
 const Debug = require('../development/Debug');
 const {Route} = require('react-router');
-const {ConnectedRouter} = require('react-router-redux');
-const createHistory = require('history/createHashHistory').default;
-const history = createHistory();
-
+const {ConnectedRouter} = require('connected-react-router');
+const history = require('../../stores/History')();
 
 const Localized = require('../I18N/Localized');
 

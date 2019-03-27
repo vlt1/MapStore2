@@ -1,7 +1,7 @@
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 var path = require("path");
 const glob = require('glob');
-const extractThemesPlugin = new ExtractTextPlugin({
+const extractThemesPlugin = new MiniCssExtractPlugin({
     filename: '[name].css'
 });
 

@@ -24,9 +24,9 @@ const {createEpicMiddleware} = require('redux-observable');
 const SecurityUtils = require('../utils/SecurityUtils');
 const ListenerEnhancer = require('@carnesen/redux-add-action-listener-enhancer').default;
 
-const {routerReducer, routerMiddleware} = require('react-router-redux');
-const routerCreateHistory = require('history/createHashHistory').default;
-const history = routerCreateHistory();
+const { routerMiddleware, connectRouter } = require('connected-react-router');
+
+const history = require('./History')();
 
 // Build the middleware for intercepting and dispatching navigation actions
 const reduxRouterMiddleware = routerMiddleware(history);
@@ -44,6 +44,7 @@ module.exports = (initialState = {defaultState: {}, mobile: {}}, appReducers = {
         ...appReducers,
         localConfig: require('../reducers/localConfig'),
         locale: require('../reducers/locale'),
+        locales: () => {return null; },
         browser: require('../reducers/browser'),
         controls: require('../reducers/controls'),
         theme: require('../reducers/theme'),
@@ -51,7 +52,7 @@ module.exports = (initialState = {defaultState: {}, mobile: {}}, appReducers = {
         map: () => {return null; },
         mapInitialConfig: () => {return null; },
         layers: () => {return null; },
-        routing: routerReducer
+        router: connectRouter(history)
     });
     const rootEpic = combineEpics(plugins, {...appEpics, ...standardEpics});
     const optsState = storeOpts.initialState || {defaultState: {}, mobile: {}};

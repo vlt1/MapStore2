@@ -6,12 +6,17 @@ const NoEmitOnErrorsPlugin = require("webpack/lib/NoEmitOnErrorsPlugin");
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
 const ParallelUglifyPlugin = require("webpack-parallel-uglify-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publicPath, cssPrefix, chunks) => ({
     entry: assign({
         'webpack-dev-server': 'webpack-dev-server/client?http://0.0.0.0:8081', // WebpackDevServer host and port
         'webpack': 'webpack/hot/only-dev-server' // "only" prevents reload on syntax errors
     }, bundles, themeEntries),
+    mode: "development",
+    optimization: {
+         minimize: false
+    },
     output: {
         path: paths.dist,
         publicPath,
@@ -28,11 +33,6 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
         new LoaderOptionsPlugin({
             debug: !prod,
             options: {
-                postcss: {
-                    plugins: [
-                      require('postcss-prefix-selector')({prefix: cssPrefix || '.ms2', exclude: ['.ms2', '[data-ms2-container]'].concat(cssPrefix ? [cssPrefix] : [])})
-                    ]
-                },
                 context: paths.base
             }
         }),
@@ -69,7 +69,12 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
                 }, {
                     loader: 'css-loader'
                 }, {
-                  loader: 'postcss-loader'
+                  loader: 'postcss-loader',
+                        options: {
+                            plugins: [
+                                require('postcss-prefix-selector')({ prefix: cssPrefix || '.ms2', exclude: ['.ms2', '[data-ms2-container]'].concat(cssPrefix ? [cssPrefix] : []) })
+                            ]
+                        }
                 }]
             },
             {
@@ -85,10 +90,17 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
             },
             {
                 test: /themes[\\\/]?.+\.less$/,
-                use: extractThemesPlugin.extract({
-                        fallback: 'style-loader',
-                        use: ['css-loader', 'postcss-loader', 'less-loader']
-                    })
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    'css-loader', {
+                        loader: 'postcss-loader',
+                        options: {
+                            plugins: [
+                                require('postcss-prefix-selector')({ prefix: cssPrefix || '.ms2', exclude: ['.ms2', '[data-ms2-container]'].concat(cssPrefix ? [cssPrefix] : []) })
+                            ]
+                        }
+                    }, 'less-loader'
+                ]
             },
             {
                 test: /\.woff(2)?(\?v=[0-9].[0-9].[0-9])?$/,
@@ -119,13 +131,6 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
                 }] // inline base64 URLs for <=8k images, direct URLs for the rest
             },
             {
-                test: /\.jsx$/,
-                exclude: /(ol\.js)$|(Cesium\.js)$/,
-                use: [{
-                    loader: "react-hot-loader"
-                }],
-                include: paths.code
-            }, {
                 test: /\.jsx?$/,
                 exclude: /(ol\.js)$|(Cesium\.js)$/,
                 use: [{
