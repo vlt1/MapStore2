@@ -114,7 +114,7 @@ class MapPreview extends React.Component {
         });
         const resolutions = this.getResolutions();
         const mapOptions = resolutions ? {view: {resolutions}} : {};
-        const projection = this.props.map.projection || 'EPSG:3857';
+        const projection = this.props.map && this.props.map.projection || 'EPSG:3857';
         return this.props.map && this.props.map.center ?
 
                 <div className="print-map-preview"><PMap
@@ -146,7 +146,7 @@ class MapPreview extends React.Component {
                     /> : null}
                 {this.props.enableRefresh ? <Button bsStyle="primary" onClick={this.props.onMapRefresh} className="print-mappreview-refresh"><Glyphicon glyph="refresh"/></Button> : null}
                 </div>
-         : <span/>;
+         : null;
     }
 }
 

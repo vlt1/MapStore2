@@ -21,7 +21,6 @@ module.exports = ({files, path, testFile, singleRun}) => ({
         outputDir: './web/target/karma-tests-results',
         suite: ''
     },
-
     coverageReporter: {
         dir: './coverage/',
         reporters: [
@@ -98,6 +97,9 @@ module.exports = ({files, path, testFile, singleRun}) => ({
             ]
         },
         resolve: {
+            alias: {
+                jsonix: '@boundlessgeo/jsonix'
+            },
             extensions: ['.js', '.json', '.jsx']
         }
     },

@@ -136,7 +136,8 @@ class MetadataModal extends React.Component {
         availablePermissions: ["canRead", "canWrite"],
         availableGroups: [],
         updatePermissions: () => {},
-        groups: []
+        groups: [],
+        map: {}
     };
 
     state = {

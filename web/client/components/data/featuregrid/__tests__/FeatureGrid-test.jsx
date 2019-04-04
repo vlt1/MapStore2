@@ -12,8 +12,8 @@ const TestUtils = require('react-dom/test-utils');
 var FeatureGrid = require('../FeatureGrid');
 
 const spyOn = expect.spyOn;
-const museam = require('json-loader!../../../../test-resources/wfs/museam.json');
-const describePois = require('json-loader!../../../../test-resources/wfs/describe-pois.json');
+const museam = require('../../../../test-resources/wfs/museam.json');
+const describePois = require('../../../../test-resources/wfs/describe-pois.json');
 
 // TODO FIX ALL THESE TESTS (recompose)
 describe('Test for FeatureGrid component', () => {

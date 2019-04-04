@@ -29,7 +29,7 @@ describe("test the Annotations Panel", () => {
         const annotations = ReactDOM.render(<Annotations/>, document.getElementById("container"));
         expect(annotations).toExist();
         const annotationsNode = ReactDOM.findDOMNode(annotations);
-        expect(annotationsNode).toNotExist();
+        expect(annotationsNode).toExist();
     });
 
     it('test removing annotations', () => {

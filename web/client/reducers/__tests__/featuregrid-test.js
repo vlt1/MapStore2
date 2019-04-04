@@ -52,7 +52,7 @@ const {featureTypeLoaded, createQuery} = require('../../actions/wfsquery');
 
 const {changeDrawingStatus} = require('../../actions/draw');
 
-const museam = require('json-loader!../../test-resources/wfs/museam.json');
+const museam = require('../../test-resources/wfs/museam.json');
 describe('Test the featuregrid reducer', () => {
 
     it('returns original state on unrecognized action', () => {

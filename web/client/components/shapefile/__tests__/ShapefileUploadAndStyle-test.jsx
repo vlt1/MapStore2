@@ -3,7 +3,7 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const ShapefileUploadAndStyle = require('../ShapefileUploadAndStyle');
 
-describe("Test the select shapefile component", () => {
+describe("Test the shapefile upload and style component", () => {
     beforeEach((done) => {
         document.body.innerHTML = '<div id="container"></div>';
         setTimeout(done);

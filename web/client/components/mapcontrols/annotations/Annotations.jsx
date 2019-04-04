@@ -85,7 +85,8 @@ class Annotations extends React.Component {
     static defaultProps = {
         mode: 'list',
         config: defaultConfig,
-        classNameSelector: () => ''
+        classNameSelector: () => '',
+        annotations: []
     };
 
     getConfig = () => {

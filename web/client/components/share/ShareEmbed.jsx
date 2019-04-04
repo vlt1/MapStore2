@@ -25,7 +25,8 @@ class ShareEmbed extends React.Component {
     };
 
     static defaultProps = {
-        showTOCToggle: true
+        showTOCToggle: true,
+        shareUrl: ''
     };
 
     state = {copied: false, forceDrawer: false};

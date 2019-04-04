@@ -161,7 +161,7 @@ describe('Test the mapInfo reducer', () => {
         expect(state.requests.length).toBe(1);
         expect(state.requests.filter((req) => req.reqId === 1)[0].request).toBe("request");
 
-        state = mapInfo({requests: {} }, {type: 'NEW_MAPINFO_REQUEST', reqId: 1, request: "request"});
+        state = mapInfo({requests: [] }, {type: 'NEW_MAPINFO_REQUEST', reqId: 1, request: "request"});
         expect(state.requests).toExist();
         expect(state.requests.length).toBe(1);
         expect(state.requests.filter((req) => req.reqId === 1)[0].request).toBe("request");

@@ -25,7 +25,7 @@ const mockStore = withContext({
 const WorkspacesFilter = mockStore(require('../WorkspacesFilter'));
 
 
-describe('it render components', () => {
+describe('WorkspacesFilter', () => {
     beforeEach((done) => {
         document.body.innerHTML = '<div id="container"></div>';
         setTimeout(done);

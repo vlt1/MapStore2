@@ -60,7 +60,8 @@ class AutocompleteField extends React.Component {
         paginated: true,
         valueField: "value",
         textField: "label",
-        toggleMenu: () => {}
+        toggleMenu: () => {},
+        filterField: {}
     };
 
     getOptions = () => {

@@ -45,7 +45,7 @@ describe('wfsquery Epics', () => {
         }, {queryform: { spatialField: {method: 'Viewport'}}});
     });
     it('wfsQueryEpic', (done) => {
-        const expectedResult = require('json-loader!../../test-resources/wfs/museam.json');
+        const expectedResult = require('../../test-resources/wfs/museam.json');
         testEpic(wfsQueryEpic, 2, query("base/web/client/test-resources/wfs/museam.json", {pagination: {} }), actions => {
             expect(actions.length).toBe(2);
             actions.map((action) => {
@@ -63,7 +63,7 @@ describe('wfsquery Epics', () => {
         }, {});
     });
     it('wfsQueryEpic passes query options', (done) => {
-        const expectedResult = require('json-loader!../../test-resources/wfs/museam.json');
+        const expectedResult = require('../../test-resources/wfs/museam.json');
         testEpic(wfsQueryEpic, 2, query("base/web/client/test-resources/wfs/museam.json", { pagination: {} }, {viewParams: "a:b"}), actions => {
             expect(actions.length).toBe(2);
             actions.map((action) => {
