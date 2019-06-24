@@ -192,11 +192,17 @@ Layers.registerType('wms', {
             }
             if (changed) {
                 const params = objectAssign(newParams, SecurityUtils.addAuthenticationToSLD(optionsToVendorParams(newOptions) || {}, newOptions));
-                layer.getSource().updateParams(objectAssign(params, Object.keys(oldParams || {}).reduce((previous, key) => {
+                const source = layer.getSource();
+                source.updateParams(objectAssign(params, Object.keys(oldParams || {}).reduce((previous, key) => {
                     return params[key] ? previous : objectAssign(previous, {
                         [key]: undefined
                     });
                 }, {})));
+                // force tile cache drop
+                if (source.getTileLoadFunction) {
+                    source.setTileLoadFunction(source.getTileLoadFunction());
+                }
+
             }
             if (oldOptions.credits !== newOptions.credits && newOptions.credits) {
                 layer.getSource().setAttributions(toOLAttributions(newOptions.credits));
@@ -244,9 +250,12 @@ Layers.registerType('wms', {
                             urls: urls,
                             params: queryParameters,
                             tileGrid: new ol.tilegrid.TileGrid({
+                                // TODO: custom grid sets extents
                                 extent: extent,
+                                // TODO: custom grid sets resolutions and tile size (needed to generate resolutions)
                                 resolutions: mapUtils.getResolutions(),
                                 tileSize: newOptions.tileSize ? newOptions.tileSize : 256,
+                                // TODO: GWC grid sets with `alignTopLeft=true` may require `extent[0], extent[3]`
                                 origin: newOptions.origin ? newOptions.origin : [extent[0], extent[1]]
                             })
                         }, newOptions.forceProxy ? {tileLoadFunction: proxyTileLoadFunction} : {}))

@@ -1,7 +1,15 @@
 {
     "proxyUrl": {
         "url": "proxy/?url=",
-        "useCORS": ["http://demo.geo-solutions.it/geoserver", "https://demo.geo-solutions.it:443/geoserver", "https://demo.geo-solutions.it/geoserver", "https://nominatim.openstreetmap.org", "http://cloudsdi.geo-solutions.it"]
+        "useCORS": [
+          "http://demo.geo-solutions.it/geoserver",
+          "https://demo.geo-solutions.it:443/geoserver",
+          "https://demo.geo-solutions.it/geoserver",
+          "https://nominatim.openstreetmap.org",
+          "http://cloudsdi.geo-solutions.it",
+          "https://gs-stable.geo-solutions.it/geoserver",
+          "https://gs-stable.geo-solutions.it:443/geoserver"
+        ]
     },
     "geoStoreUrl": "rest/geostore/",
     "printUrl": "pdf/info.json",
@@ -23,6 +31,10 @@
     "authenticationRules": [{
         "urlPattern": ".*geostore.*",
         "method": "bearer"
+      }, {
+        "urlPattern": "http(s)?\\:\\/\\/gs-stable\\.geo-solutions\\.it\\/geoserver/.*",
+        "authkeyParamName": "authkey",
+        "method": "authkey"
     }],
     "monitorState": [
       {"name": "routing", "path": "routing.location.pathname"},
@@ -31,6 +43,14 @@
     "projectionDefs": [],
     "initialState": {
       "defaultState": {
+        "annotations": {
+          "config": {
+            "multiGeometry": true,
+            "validationErrors": {}
+          },
+          "format": "aeronautical",
+          "defaultTextAnnotation": "New"
+        },
         "maptype": {
             "mapType": "{context.mode === 'desktop' ? 'openlayers' : 'leaflet'}"
         },
@@ -43,24 +63,24 @@
                 "isNew": true,
                 "autoload": false
             },
-            "selectedService": "Demo CSW Service",
+            "selectedService": "gs_stable_csw",
             "services": {
-              "Demo CSW Service": {
-                "url": "https://demo.geo-solutions.it/geoserver/csw",
+              "gs_stable_csw": {
+                "url": "https://gs-stable.geo-solutions.it/geoserver/csw",
                 "type": "csw",
-                "title": "Demo CSW Service",
+                "title": "GeoSolutions GeoServer CSW",
                 "autoload": true
               },
-              "Demo WMS Service": {
-                "url": "https://demo.geo-solutions.it/geoserver/wms",
+              "gs_stable_wms": {
+                "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
                 "type": "wms",
-                "title": "Demo WMS Service",
+                "title": "GeoSolutions GeoServer WMS",
                 "autoload": false
               },
-              "Demo WMTS Service": {
-                "url": "https://demo.geo-solutions.it/geoserver/gwc/service/wmts",
+              "gs_stable_wmts": {
+                "url": "https://gs-stable.geo-solutions.it/geoserver/gwc/service/wmts",
                 "type": "wmts",
-                "title": "Demo WMTS Service",
+                "title": "GeoSolutions GeoServer WMTS",
                 "autoload": false
               }
             }
@@ -147,7 +167,7 @@
                     "activateMapTitle": false,
                     "activateSortLayer": false
                 }
-            }, {
+            }, "AddGroup", {
                 "name": "TOCItemsSettings",
                 "cfg": {
                     "width": 300
@@ -228,6 +248,7 @@
             {
                 "name": "Identify",
                 "cfg": {
+                    "showHighlightFeatureButton": true,
                     "viewerOptions": {
                         "container": "{context.ReactSwipe}"
                     }
@@ -268,13 +289,15 @@
                 "cfg": {
                     "activateQueryTool": true,
                     "activateAddLayerButton": true,
+                    "activateAddGroupButton": true,
                     "activateMetedataTool": false
                 }
             },
+            "AddGroup",
             "TOCItemsSettings",
             "Tutorial", "MapFooter", {
                 "name": "Measure"
-            }, "Print", "ShapeFile", "Timeline", "Playback", {
+            }, "Print", "MapImport", "MapExport", {
                 "name": "Settings",
                 "cfg": {
                     "wrap": true
@@ -287,7 +310,8 @@
             }, {
               "name": "About",
               "showIn": ["BurgerMenu"]
-            }, {
+            }
+            , {
               "name": "MousePosition",
               "cfg": {
                 "editCRS": true,
@@ -295,6 +319,20 @@
                 "showToggle": true,
                 "filterAllowedCRS": ["EPSG:4326", "EPSG:3857"],
                 "additionalCRS": {}
+              }
+            }, {
+              "name": "CRSSelector",
+              "cfg": {
+                "additionalCRS": {
+
+                },
+                "filterAllowedCRS": [
+                  "EPSG:4326",
+                  "EPSG:3857"
+                ],
+                "allowedRoles": [
+                  "ADMIN"
+                ]
               }
             }, {
                 "name": "Search",
@@ -344,7 +382,8 @@
                 }
             },
             "OmniBar", "Login", "Save", "SaveAs", "BurgerMenu", "Expander", "Undo", "Redo", "FullScreen", "GlobeViewSwitcher", "SearchServicesConfig", "WidgetsBuilder", "Widgets", "WidgetsTray",
-            "FloatingLegend",
+            "Timeline",
+            "Playback",
             "FeedbackMask",
             "StyleEditor"
         ],
@@ -424,7 +463,7 @@
                     "activateRemoveLayer": false
                 }
 
-            }, "MapFooter", {
+            }, "AddGroup", "MapFooter", {
                 "name": "Settings",
                 "cfg": {
                     "wrap": true
@@ -502,9 +541,9 @@
           "name": "DashboardEditor",
           "cfg": {
              "catalog": {
-              "url": "https://demo.geo-solutions.it/geoserver/csw",
+              "url": "https://gs-stable.geo-solutions.it/geoserver/csw",
               "type": "csw",
-              "title": "Demo CSW Service",
+              "title": "GeoSolutions GeoServer CSW",
               "autoload": true
             },
             "containerPosition": "columns"

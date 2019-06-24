@@ -7,7 +7,8 @@
  */
 
 const timeline = require('../timeline');
-const {rangeDataLoaded, selectLayer, timeDataLoading} = require('../../actions/timeline');
+const {rangeDataLoaded, selectLayer, timeDataLoading, setCollapsed, setMapSync} = require('../../actions/timeline');
+const { isCollapsed, isMapSync } = require('../../selectors/timeline');
 const expect = require('expect');
 
 describe('Test the timeline reducer', () => {
@@ -113,5 +114,13 @@ describe('Test the timeline reducer', () => {
         expect(state).toExist();
         expect(state.rangeData).toNotExist();
         expect(state.selectedLayer).toNotExist();
+    });
+    it('setCollapsed action', () => {
+        const action = setCollapsed(true);
+        expect(isCollapsed({timeline: timeline(undefined, action)})).toBe(true);
+    });
+    it('setMapSync', () => {
+        expect(isMapSync({timeline: timeline({}, setMapSync(true))})).toBe(true);
+        expect(isMapSync({ timeline: timeline({}, setMapSync(false)) })).toBe(false);
     });
 });

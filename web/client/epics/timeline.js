@@ -4,14 +4,18 @@ const {isString, get, head, castArray} = require('lodash');
 const moment = require('moment');
 const {wrapStartStop} = require('../observables/epics');
 
-const { SELECT_TIME, RANGE_CHANGED, ENABLE_OFFSET, timeDataLoading, rangeDataLoaded, onRangeChanged, selectLayer } = require('../actions/timeline');
+
+const { CHANGE_MAP_VIEW } = require('../actions/map');
+
+const { SELECT_TIME, RANGE_CHANGED, ENABLE_OFFSET, SET_MAP_SYNC, timeDataLoading, rangeDataLoaded, onRangeChanged, selectLayer } = require('../actions/timeline');
 const { setCurrentTime, UPDATE_LAYER_DIMENSION_DATA, setCurrentOffset } = require('../actions/dimension');
+
 const {REMOVE_NODE} = require('../actions/layers');
 const {error} = require('../actions/notifications');
 
 const {getLayerFromId} = require('../selectors/layers');
-const { rangeSelector, selectedLayerName, selectedLayerUrl, isAutoSelectEnabled, selectedLayerSelector } = require('../selectors/timeline');
-const { layerTimeSequenceSelectorCreator, timeDataSelector, offsetTimeSelector, currentTimeSelector, layersWithTimeDataSelector } = require('../selectors/dimension');
+const { rangeSelector, selectedLayerName, selectedLayerUrl, isAutoSelectEnabled, selectedLayerSelector, timelineLayersSelector, multidimOptionsSelectorCreator, isMapSync } = require('../selectors/timeline');
+const { layerTimeSequenceSelectorCreator, timeDataSelector, offsetTimeSelector, currentTimeSelector } = require('../selectors/dimension');
 
 const { getNearestDate, roundRangeResolution, isTimeDomainInterval } = require('../utils/TimeUtils');
 const { getHistogram, describeDomains, getDomainValues } = require('../api/MultiDim');
@@ -27,14 +31,14 @@ const MAX_HISTOGRAM = 20;
  * @param {object} paginationOptions
  */
 const domainArgs = (state, paginationOptions = {}) => {
-
+    const id = selectedLayerSelector(state);
     const layerName = selectedLayerName(state);
     const layerUrl = selectedLayerUrl(state);
-
+    const bboxOptions = multidimOptionsSelectorCreator(id)(state);
     return [layerUrl, layerName, "time", {
         limit: 1,
         ...paginationOptions
-    }];
+    }, bboxOptions];
 };
 /**
  * creates an observable that emit a time that snap the values of the selected layer to the current time
@@ -96,7 +100,8 @@ const loadRangeData = (id, timeData, getState) => {
             {
                 [TIME_DIMENSION]: `${toISOString(range.start)}/${toISOString(range.end)}`
             },
-            resolution
+            resolution,
+            multidimOptionsSelectorCreator(id)(getState())
         )
         .merge(
             describeDomains(
@@ -104,6 +109,7 @@ const loadRangeData = (id, timeData, getState) => {
                 layerName,
                 filter,
                 {
+                    ...multidimOptionsSelectorCreator(id)(getState()),
                     expandLimit: MAX_ITEMS_PER_LAYER
                 }
             )
@@ -128,8 +134,12 @@ const loadRangeData = (id, timeData, getState) => {
         }
 
         const domainValues = domain && domain.indexOf('--') < 0 && domain.split(',');
-        // const total = values.reduce((a, b) => a + b, 0);
 
+        /*
+         * shape of range: {start: "T_START", end: "T_END"}
+         * shape of histogram {values: [1, 2, 3], domain: "T_START/T_END/RESOLUTION" }
+         * shape of domain: {values: ["T1", "T2", ....]}, present only if not in the form "T1--T2"
+         */
         return Rx.Observable.of({
             range,
             histogram: histogram && histogram.Domain
@@ -186,18 +196,20 @@ module.exports = {
      * Initializes the time line
      */
     setupTimelineExistingSettings: (action$, { getState = () => { } } = {}) => action$.ofType(REMOVE_NODE, UPDATE_LAYER_DIMENSION_DATA)
-        .exhaustMap(() => isAutoSelectEnabled(getState()) && get(layersWithTimeDataSelector(getState()), "[0].id")
-        && !selectedLayerSelector(getState())
-            ? Rx.Observable.of(selectLayer(get(layersWithTimeDataSelector(getState()), "[0].id")))
-                .concat(
-                    Rx.Observable.of(1).switchMap( () =>
-                        snapTime(getState(), get(layersWithTimeDataSelector(getState()), "[0].id"), currentTimeSelector(getState) || new Date().toISOString())
-                            .filter( v => v)
-                            .map(time => setCurrentTime(time)))
-                )
-            : Rx.Observable.empty()
+        .exhaustMap(() =>
+            isAutoSelectEnabled(getState())
+            && get(timelineLayersSelector(getState()), "[0].id")
+            && !selectedLayerSelector(getState())
+                ? Rx.Observable.of(selectLayer(get(timelineLayersSelector(getState()), "[0].id")))
+                    .concat(
+                        Rx.Observable.of(1).switchMap( () =>
+                            snapTime(getState(), get(timelineLayersSelector(getState()), "[0].id"), currentTimeSelector(getState) || new Date().toISOString())
+                                .filter( v => v)
+                                .map(time => setCurrentTime(time)))
+                    )
+                : Rx.Observable.empty()
     ),
-     /**
+    /**
      * When offset is initiated this epic sets both initial current time and offset if any does not exist
      * The policy is:
      *  - if current time is not defined, it will be placed to the center of the current timeline's viewport. If the viewport is undefined it is set to "now"
@@ -244,11 +256,17 @@ module.exports = {
      */
     updateRangeDataOnRangeChange: (action$, { getState = () => { } } = {}) =>
         action$.ofType(RANGE_CHANGED)
+            .merge(
+                action$.ofType(CHANGE_MAP_VIEW).filter(() => isMapSync(getState())),
+                action$.ofType(SET_MAP_SYNC)
+            )
             .debounceTime(400)
             .merge(action$.ofType(UPDATE_LAYER_DIMENSION_DATA).debounceTime(50))
             .switchMap( () => {
                 const timeData = timeDataSelector(getState()) || {};
-                const layerIds = Object.keys(timeData).filter(id => timeData[id] && timeData[id].domain && isTimeDomainInterval(timeData[id].domain));
+                const layerIds = Object.keys(timeData).filter(id => timeData[id] && timeData[id].domain
+                    // when data is already fully downloaded, no need to refresh, except if the mapSync is active
+                    && (isTimeDomainInterval(timeData[id].domain)) || isMapSync(getState()));
                 // update range data for every layer that need to sync with histogram/domain
                 return Rx.Observable.merge(
                     ...layerIds.map(id =>

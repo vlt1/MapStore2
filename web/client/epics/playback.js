@@ -19,7 +19,8 @@ const {
     selectLayer,
     onRangeChanged,
     timeDataLoading,
-    SELECT_LAYER
+    SELECT_LAYER,
+    SET_MAP_SYNC
 } = require('../actions/timeline');
 
 const { changeLayerProperties, REMOVE_NODE } = require('../actions/layers');
@@ -32,7 +33,7 @@ const { LOCATION_CHANGE } = require('react-router-redux');
 
 const { currentFrameSelector, currentFrameValueSelector, lastFrameSelector, playbackRangeSelector, playbackSettingsSelector, frameDurationSelector, statusSelector, playbackMetadataSelector } = require('../selectors/playback');
 
-const { selectedLayerName, selectedLayerUrl, selectedLayerData, selectedLayerTimeDimensionConfiguration, rangeSelector, selectedLayerSelector } = require('../selectors/timeline');
+const { selectedLayerSelector, selectedLayerName, selectedLayerUrl, selectedLayerData, selectedLayerTimeDimensionConfiguration, rangeSelector, timelineLayersSelector, multidimOptionsSelectorCreator } = require('../selectors/timeline');
 
 const pausable = require('../observables/pausable');
 const { wrapStartStop } = require('../observables/epics');
@@ -51,16 +52,18 @@ const toAbsoluteInterval = (start, end) => `${start}/${end}`;
  * @param {object} paginationOptions additional options to send to the service. (e.g. `fromValue`)
  */
 const domainArgs = (getState, paginationOptions = {}) => {
-    // const timeData = timeDataSelector(getState()) || {};
+    const id = selectedLayerSelector(getState());
     const layerName = selectedLayerName(getState());
     const layerUrl = selectedLayerUrl(getState());
     const { startPlaybackTime, endPlaybackTime } = playbackRangeSelector(getState()) || {};
     const shouldFilter = statusSelector(getState()) === STATUS.PLAY || statusSelector(getState()) === STATUS.PAUSE;
     return [layerUrl, layerName, "time", {
-        limit: BUFFER_SIZE, // default, can be overridden by pagination options
-        time: startPlaybackTime && endPlaybackTime && shouldFilter ? toAbsoluteInterval(startPlaybackTime, endPlaybackTime) : undefined,
-        ...paginationOptions
-    }];
+            limit: BUFFER_SIZE, // default, can be overridden by pagination options
+            time: startPlaybackTime && endPlaybackTime && shouldFilter ? toAbsoluteInterval(startPlaybackTime, endPlaybackTime) : undefined,
+            ...paginationOptions
+        },
+        multidimOptionsSelectorCreator(id)(getState())
+    ];
 };
 
 /**
@@ -166,7 +169,16 @@ module.exports = {
      */
     retrieveFramesForPlayback: (action$, { getState = () => { } } = {}) =>
         action$.ofType(PLAY).exhaustMap(() =>
-            getAnimationFrames(getState)
+            getAnimationFrames(getState, {
+                fromValue:
+                    // if animation range is set, don't set from value on startup...
+                    (playbackRangeSelector(getState())
+                        && playbackRangeSelector(getState()).startPlaybackTime
+                        && playbackRangeSelector(getState()).endPlaybackTime)
+                    ? undefined
+                    // ...otherwise, start from the current time (start animation from cursor position)
+                    : currentTimeSelector(getState())
+                })
                 .map((frames) => setFrames(frames))
                 .let(wrapStartStop(framesLoading(true), framesLoading(false)), () => Rx.Observable.of(
                     error({
@@ -190,6 +202,8 @@ module.exports = {
                         )
                 )
                 .takeUntil(action$.ofType(STOP, LOCATION_CHANGE))
+                // this removes loading mask even if the STOP action is triggered before frame end (empty result)
+                .concat(Rx.Observable.of(timeDataLoading(false, false)))
                 .let(setupAnimation(getState))
         ),
     /**
@@ -238,7 +252,7 @@ module.exports = {
                     // need to select first
                     : Rx.Observable.of(
                         selectLayer(
-                            get(layersWithTimeDataSelector(getState()), "[0].id")
+                            get(timelineLayersSelector(getState()), "[0].id")
                         )
                     )
             ),
@@ -268,7 +282,7 @@ module.exports = {
      */
     playbackCacheNextPreviousTimes: (action$, { getState = () => { } } = {}) =>
         action$
-            .ofType(SET_CURRENT_TIME, MOVE_TIME, SELECT_LAYER, STOP)
+            .ofType(SET_CURRENT_TIME, MOVE_TIME, SELECT_LAYER, STOP, SET_MAP_SYNC )
                 .filter(() => statusSelector(getState()) !== STATUS.PLAY && statusSelector(getState()) !== STATUS.PAUSE)
                 .filter(() => selectedLayerSelector(getState()))
                 .filter( t => !!t )
