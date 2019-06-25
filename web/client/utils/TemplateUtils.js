@@ -8,6 +8,51 @@
 
 import {isString, has, trim, template} from 'lodash';
 
+/**
+ * check if a string attribute is inside of a given object
+ * @param feature {object}
+ * @param attribute {string} name of attribue with dot notations
+ * @param start {array} substring start
+ * @param end {array} substring end
+ * @return {bool} true if feature contains the attribute
+ */
+const validateStringAttribute = (feature, attribute, start = 0, end = 0) => {
+    const path = isString(attribute) && trim(attribute.substring(start, attribute.length - end)) || '';
+    return has(feature, path);
+};
+
+/**
+ * returns a valid template
+ * @param chosenTemplate {string} text with attribute to validate
+ * @param feature {object} object to match attributes
+ * @param regex {regex}
+ * @param start {array} substring start
+ * @param end {array} substring end
+ * @return {string} template without invalid attribute and html tag inside attribute, e.g. ${ <p>properties.id</p> } -> ${ properties.id }
+ */
+export const getCleanTemplate = (chosenTemplate, feature, regex, start = 0, end = 0, getDefaultMissingProperty = () => "") => {
+    const matchVariables = isString(chosenTemplate) && chosenTemplate.match(regex);
+    const replacedTag = matchVariables && matchVariables.map(temp => {
+        const varReplaced = temp.replace(/(<([^>]+)>)/ig, '');
+        return {
+            previous: temp,
+            next: validateStringAttribute(feature, varReplaced, start, end) ? varReplaced : getDefaultMissingProperty(temp)
+        };
+    }) || null;
+    return replacedTag && replacedTag.reduce((temp, variable) => temp.replace(variable.previous, variable.next), chosenTemplate) || chosenTemplate || '';
+};
+
+/**
+ * parses a template with attributes defined in ${ ... } and applied to the metadata object
+ * @param metadataTemplate {string} text with attribute to validate
+ * @param getDefaultMissingProperty {function} if defined it returns a default value for undefined attributes
+ * @param metadata {object} metadata object to match attributes
+ * @return {string} template without invalid attribute and html tag inside attribute, e.g. ${ <p>properties.id</p> } -> ${ properties.id } and a default value for undefined attributes
+ */
+export const parseCustomTemplate = (metadataTemplate = "", metadata = {}, getDefaultMissingProperty = (attribute) => `${trim(attribute.substring(2, attribute.length - 1))} Not Available`) => {
+    return template(getCleanTemplate(metadataTemplate || '', metadata, /\$\{.*?\}/g, 2, 1, getDefaultMissingProperty))(metadata);
+};
+
 const TemplateUtils = {
     /**
      * generates a template string to use for static replacements.
@@ -57,48 +102,10 @@ const TemplateUtils = {
             }
         });
     },
-    /**
-     * check if a string attribute is inside of a given object
-     * @param feature {object}
-     * @param attribute {string} name of attribue with dot notations
-     * @param start {array} substring start
-     * @param end {array} substring end
-     * @return {bool} true if feature contains the attribute
-     */
-    validateStringAttribute: (feature, attribute, start = 0, end = 0) => {
-        const path = isString(attribute) && trim(attribute.substring(start, attribute.length - end)) || '';
-        return has(feature, path);
-    },
-    /**
-     * returns a valid template
-     * @param chosenTemplate {string} text with attribute to validate
-     * @param feature {object} object to match attributes
-     * @param regex {regex}
-     * @param start {array} substring start
-     * @param end {array} substring end
-     * @return {string} template without invalid attribute and html tag inside attribute, e.g. ${ <p>properties.id</p> } -> ${ properties.id }
-     */
-    getCleanTemplate: (chosenTemplate, feature, regex, start = 0, end = 0, getDefaultMissingProperty = () => "") => {
-        const matchVariables = isString(chosenTemplate) && chosenTemplate.match(regex);
-        const replacedTag = matchVariables && matchVariables.map(temp => {
-            const varReplaced = temp.replace(/(<([^>]+)>)/ig, '');
-            return {
-                previous: temp,
-                next: TemplateUtils.validateStringAttribute(feature, varReplaced, start, end) ? varReplaced : getDefaultMissingProperty(temp)
-            };
-        }) || null;
-        return replacedTag && replacedTag.reduce((temp, variable) => temp.replace(variable.previous, variable.next), chosenTemplate) || chosenTemplate || '';
-    },
-    /**
-     * parses a template with attributes defined in ${ ... } and applied to the metadata object
-     * @param metadataTemplate {string} text with attribute to validate
-     * @param getDefaultMissingProperty {function} if defined it returns a default value for undefined attributes
-     * @param metadata {object} metadata object to match attributes
-     * @return {string} template without invalid attribute and html tag inside attribute, e.g. ${ <p>properties.id</p> } -> ${ properties.id } and a default value for undefined attributes
-     */
-    parseCustomTemplate: (metadataTemplate = "", metadata = {}, getDefaultMissingProperty = (attribute) => `${trim(attribute.substring(2, attribute.length - 1))} Not Available`) => {
-        return template(TemplateUtils.getCleanTemplate(metadataTemplate || '', metadata, /\$\{.*?\}/g, 2, 1, getDefaultMissingProperty))(metadata);
-    }
+    validateStringAttribute,
+    getCleanTemplate,
+    parseCustomTemplate
 };
 
-module.exports = TemplateUtils;
+export default TemplateUtils;
+

@@ -11,7 +11,7 @@ const PropTypes = require('prop-types');
 const Debug = require('../development/Debug');
 const {Route} = require('react-router');
 const {ConnectedRouter} = require('connected-react-router');
-const history = require('../../stores/History')();
+const history = require('../../stores/History').default;
 
 const Localized = require('../I18N/Localized');
 

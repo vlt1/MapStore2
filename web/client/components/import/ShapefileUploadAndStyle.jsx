@@ -89,8 +89,7 @@ class ShapeFileUploadAndStyle extends React.Component {
         buttonSize: "small",
         uploadOptions: {},
         createId: () => undefined,
-        bbox: null,
-        stylers: {}
+        bbox: null
     };
 
     state = {

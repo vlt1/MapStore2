@@ -40,6 +40,7 @@ module.exports = ({files, path, testFile, singleRun, basePath = ".", alias = {}}
     },
     webpack: {
         devtool: 'eval',
+        mode: 'development',
         module: {
             rules: [
                 {

@@ -26,7 +26,7 @@ const ListenerEnhancer = require('@carnesen/redux-add-action-listener-enhancer')
 
 const { routerMiddleware, connectRouter } = require('connected-react-router');
 
-const history = require('./History')();
+const history = require('./History').default;
 
 // Build the middleware for intercepting and dispatching navigation actions
 const reduxRouterMiddleware = routerMiddleware(history);

@@ -27,10 +27,10 @@ class SelectAnnotationsFile extends React.Component {
         onFileChoosen: PropTypes.func,
         error: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
         errorMessage: PropTypes.string,
-        onClose: React.PropTypes.func,
+        onClose: PropTypes.func,
         title: PropTypes.node,
         closeGlyph: PropTypes.string,
-        disableOvveride: React.PropTypes.bool
+        disableOvveride: PropTypes.bool
     };
 
     static contextTypes = {

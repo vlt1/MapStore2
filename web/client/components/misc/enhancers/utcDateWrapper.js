@@ -29,7 +29,7 @@ import {
  * actual timezone
 */
 
-module.exports = ({dateTypeProp = "type", dateProp = 'date', setDateProp = 'onSetDate'} = {}) => compose(
+export default ({dateTypeProp = "type", dateProp = 'date', setDateProp = 'onSetDate'} = {}) => compose(
     withPropsOnChange([dateProp], ({ [dateProp]: date, [dateTypeProp]: type, useUTCOffset = true }) /*props*/ => {
         let dateToParse = date;
         let datePart = "1970-01-01";

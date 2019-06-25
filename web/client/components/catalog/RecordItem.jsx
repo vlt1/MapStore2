@@ -291,4 +291,4 @@ class RecordItem extends React.Component {
     };
 }
 
-module.exports = RecordItem;
+export default RecordItem;
